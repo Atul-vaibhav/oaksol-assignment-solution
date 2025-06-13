@@ -1,52 +1,63 @@
 import json
 import mysql.connector
 
-# Load JSON Data
-with open("structured_data.json", "r") as json_file:
-    patient_record = json.load(json_file)
+def main(json_file_path="structured_data.json"):
+    try:
+        with open(json_file_path, "r") as json_file:
+            patient_record = json.load(json_file)
+    except FileNotFoundError:
+        print(f"Error: JSON file '{json_file_path}' not found.")
+        return
 
-# Database Connection
-conn = mysql.connector.connect(
-    host="localhost",
-    user="your_user",
-    password="your_password",
-    database="hospital_db"
-)
-cursor = conn.cursor()
+    # Update with your credentials
+    db_config = {
+        "host": "localhost",
+        "user": "your_user",  # <-- CHANGE THIS
+        "password": "your_password",  # <-- CHANGE THIS
+        "database": "hospital_db"
+    }
 
-# Create Tables (if not exists)
-cursor.execute('''
-    CREATE TABLE IF NOT EXISTS patients (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        name VARCHAR(255),
-        dob DATE
-    );
-''')
+    try:
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor()
 
-cursor.execute('''
-    CREATE TABLE IF NOT EXISTS forms_data (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        patient_id INT,
-        form_json JSON,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (patient_id) REFERENCES patients(id)
-    );
-''')
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS patients (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                name VARCHAR(255),
+                dob DATE
+            );
+        ''')
 
-# Insert Data into Tables
-name = patient_record.get("patient_name", "Unknown")
-dob = patient_record.get("dob", "2000-01-01")  # Default DOB if not available
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS forms_data (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                patient_id INT,
+                form_json JSON,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (patient_id) REFERENCES patients(id)
+            );
+        ''')
 
-# Insert into patients table
-cursor.execute("INSERT INTO patients (name, dob) VALUES (%s, %s)", (name, dob))
-patient_id = cursor.lastrowid
+        name = patient_record.get("patient_name", "Unknown")
+        dob = patient_record.get("dob", "2000-01-01")
 
-# Insert JSON into forms_data table
-cursor.execute("INSERT INTO forms_data (patient_id, form_json) VALUES (%s, %s)", (patient_id, json.dumps(patient_record)))
+        cursor.execute("INSERT INTO patients (name, dob) VALUES (%s, %s)", (name, dob))
+        patient_id = cursor.lastrowid
 
-# Commit and Close Connection
-conn.commit()
-cursor.close()
-conn.close()
+        cursor.execute("INSERT INTO forms_data (patient_id, form_json) VALUES (%s, %s)",
+                       (patient_id, json.dumps(patient_record)))
 
-print("Data successfully inserted into MySQL database!")
+        conn.commit()
+        print("Data successfully inserted into MySQL database!")
+
+    except mysql.connector.Error as err:
+        print(f"Database error: {err}")
+    finally:
+        if 'cursor' in locals():
+            cursor.close()
+        if 'conn' in locals() and conn.is_connected():
+            conn.close()
+
+if __name__ == "__main__":
+    main()
