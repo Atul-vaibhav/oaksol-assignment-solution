@@ -1,4 +1,4 @@
-
+<meta name="google-site-verification" content="HWPAXc3oT80A_bdliJ1DNunz4koBUNADU6-sa9Z7MOs" />
 <meta name="description" content="Smart AI model for predicting weather using ML techniques">
 <meta name="keywords" content="weather forecast, AI model, temperature prediction, humidity, GitHub project">
 
