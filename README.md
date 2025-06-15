@@ -1,7 +1,6 @@
-<!--
+
 <meta name="description" content="Smart AI model for predicting weather using ML techniques">
 <meta name="keywords" content="weather forecast, AI model, temperature prediction, humidity, GitHub project">
--->
 
 # OCR to MySQL Data Pipeline
 
